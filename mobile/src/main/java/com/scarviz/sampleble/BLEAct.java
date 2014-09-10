@@ -171,6 +171,10 @@ public class BLEAct extends Activity {
 	 * Serviceを停止する
 	 */
 	private void StopService(){
+		if (IsEnabledBluetooth()){
+			mBoundService.DisConnect();
+		}
+
 		unbindService(mConnection);
 		Intent intent = new Intent(this, BTService.class);
 		stopService(intent);

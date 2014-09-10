@@ -40,9 +40,7 @@ public class BTService extends Service {
 	@Override
 	public void onDestroy() {
 		Log.d(TAG, "onDestroy");
-		if(mBtHelper != null) {
-			mBtHelper.DisConnect();
-		}
+		DisConnect();
 	}
 
 	/**
@@ -54,20 +52,6 @@ public class BTService extends Service {
 	public IBinder onBind(Intent intent) {
 		Log.d(TAG, "onBind");
 		return mBinder;
-	}
-
-	/**
-	 * UnBind処理
-	 * @param intent
-	 * @return
-	 */
-	@Override
-	public boolean onUnbind(Intent intent) {
-		Log.d(TAG, "onUnbind");
-		if(mBtHelper != null) {
-			mBtHelper.DisConnect();
-		}
-		return super.onUnbind(intent);
 	}
 
 	/**
@@ -114,6 +98,16 @@ public class BTService extends Service {
 	public void Connect(String address){
 		// 手動で接続するのでautoConnectはfalse
 		mBtHelper.Connect(this, false, address);
+	}
+
+	/**
+	 * Bluetooth機器の切断
+	 */
+	public void DisConnect(){
+		Log.d(TAG, "DisConnect");
+		if(mBtHelper != null) {
+			mBtHelper.DisConnect();
+		}
 	}
 
 	/**
