@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
 
@@ -41,6 +42,8 @@ public class BTService extends Service {
 	public void onDestroy() {
 		Log.d(TAG, "onDestroy");
 		DisConnect();
+
+		super.onDestroy();
 	}
 
 	/**
@@ -107,6 +110,7 @@ public class BTService extends Service {
 		Log.d(TAG, "DisConnect");
 		if(mBtHelper != null) {
 			mBtHelper.DisConnect();
+			mBtHelper = null;
 		}
 	}
 
@@ -152,6 +156,10 @@ public class BTService extends Service {
 					if(btSrv.mHandlerAct != null) {
 						btSrv.mHandlerAct.sendMessage(btSrv.GetMessage(msg.what));
 					}
+					break;
+				case BluetoothStatus.NOTIFY_MES:
+					String message = (String)msg.obj;
+					Toast.makeText(btSrv.getApplicationContext(), message, Toast.LENGTH_SHORT).show();
 					break;
 				case BluetoothStatus.SUCCESS:
 				case BluetoothStatus.FAILURE:

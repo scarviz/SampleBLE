@@ -15,6 +15,7 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 
 /**
@@ -33,7 +34,8 @@ public class BluetoothHelper {
 	private boolean mIsScanning = false;
 	private boolean mIsConnected = false;
 
-	BluetoothGatt mBluetoothGatt;
+	private BluetoothGatt mBluetoothGatt;
+	private BluetoothGattCharacteristic mCharacteristic;
 	/** スキャンを始めてからSCAN_PERIOD ms後にスキャンを自動停止 */
 	private static final long SCAN_PERIOD = 10000;
 
@@ -50,6 +52,7 @@ public class BluetoothHelper {
 	 * @param handler
 	 */
 	public BluetoothHelper(Context context, Handler handler){
+		Log.d(TAG, "BluetoothHelper Constructor");
 		mContext = context;
 		mHandler = handler;
 
@@ -132,6 +135,7 @@ public class BluetoothHelper {
 		if (mBluetoothGatt != null) {
 			mBluetoothGatt.close();
 			mBluetoothGatt = null;
+			mCharacteristic = null;
 		}
 		mIsConnected = false;
 		SendHandlerMessage(BluetoothStatus.DISCONNECTED);
@@ -186,19 +190,18 @@ public class BluetoothHelper {
 			}
 
 			// キャラクタリスティック
-			BluetoothGattCharacteristic characteristic =
-					service.getCharacteristic(UUID.fromString(DEVICE_CHARACTERISTIC_UUID));
+			mCharacteristic = service.getCharacteristic(UUID.fromString(DEVICE_CHARACTERISTIC_UUID));
 			// キャラクタリスティックが見つからなかった場合
-			if (characteristic == null) {
+			if (mCharacteristic == null) {
 				Log.d(TAG, "characteristic is null");
 				SendHandlerMessage(BluetoothStatus.FAILURE, "characteristic is null");
 				return;
 			}
 
 			// Notificationを要求する
-			boolean registered = gatt.setCharacteristicNotification(characteristic, true);
+			boolean registered = gatt.setCharacteristicNotification(mCharacteristic, true);
 			// Notificationを有効化
-			BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
+			BluetoothGattDescriptor descriptor = mCharacteristic.getDescriptor(
 					UUID.fromString(CHARACTERISTIC_CONFIG));
 			descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
 			gatt.writeDescriptor(descriptor);
@@ -221,23 +224,24 @@ public class BluetoothHelper {
 		@Override
 		public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
 			Log.d(TAG, "onCharacteristicChanged");
+			Log.d(TAG, characteristic.getUuid().toString());
 			// Characteristicの値更新通知
-			if (DEVICE_CHARACTERISTIC_UUID.equals(characteristic.getUuid().toString())) {
+			if (DEVICE_CHARACTERISTIC_UUID.equalsIgnoreCase(characteristic.getUuid().toString())) {
 				Log.d(TAG, "device characteristic changed");
 
 				final byte[] data = characteristic.getValue();
 				if (data != null && data.length > 0) {
-					final StringBuilder stringBuilder = new StringBuilder(data.length);
-					for(byte byteChar : data) {
-						stringBuilder.append(String.format("%02X ", byteChar));
+					String mes = null;
+					try {
+						mes = new String(data, "UTF-8");
+					} catch (UnsupportedEncodingException e) {
+						e.printStackTrace();
 					}
-
-					String mes = stringBuilder.toString();
 					if(mes == null || mes.isEmpty()) {
 						mes = "Notify is empty";
 					}
 					Log.d(TAG, mes);
-					Toast.makeText(mContext, mes, Toast.LENGTH_LONG).show();
+					SendHandlerMessage(BluetoothStatus.NOTIFY_MES, mes);
 				}
 			}
 		}

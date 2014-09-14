@@ -1,7 +1,7 @@
 package com.scarviz.sampleble;
 
 /**
- * Created by satoshi on 2014/09/10.
+ * Bluetoothステータス
  */
 public class BluetoothStatus {
 	/** Scan開始 */
@@ -14,6 +14,8 @@ public class BluetoothStatus {
 	public final static int CONNECTED = 0x1004;
 	/** 切断 */
 	public final static int DISCONNECTED = 0x1005;
+	/** Notifyメッセージ */
+	public final static int NOTIFY_MES = 0x1006;
 
 	/** 成功 */
 	public final static int SUCCESS = 0x0000;
